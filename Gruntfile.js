@@ -64,7 +64,7 @@ module.exports = function (grunt) {
                     banner: '<%= pkg.banner %>'
                 },
                 files: {
-                    '<%= paths.build %>/<%= paths.css %>/main.css': ['<%= paths.build %>/<%= paths.css %>/main.css']
+                    '<%= paths.build %>/<%= paths.css %>/main.css': ['<%= paths.build %>/<%= paths.css %>/main.css', '<%= paths.dev %>/<%= paths.css %>/**/*.css']
                 }
             }
         },

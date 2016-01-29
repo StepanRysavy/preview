@@ -1,0 +1,128 @@
+@border: 1px solid rgba(0,0,0,.1);
+@color: fade(#00f, 70%);
+
+h1, h2, h3, h4, ul, ol, div, p {
+    margin: 0;
+    padding: 0;
+}
+
+ul, ol {
+    list-style: none;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    font-size: 100%;
+    font-family: "Helvetica Neue", Calibri, Arial, sans-serif;
+    line-height: 1.4;
+    -webkit-font-smoothing: antialiased;
+}
+
+h3 {
+    font-size: .6rem;
+    color: @color;
+    text-transform: uppercase;
+    margin-bottom: .25rem;
+    display: none;
+}
+
+h4 {
+    font-size: .8rem;
+}
+
+p {
+    font-size: .7rem;
+}
+
+.input-text {
+    border: 1px solid fade(@color, 30%);
+    background: fade(@color, 10%);
+    display: block;
+    max-width: 100%;
+    width: 100%;
+    min-height: 4rem;
+}
+
+.header {
+    border-bottom: @border;
+    padding: .5rem;
+
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.project {
+    border-bottom: @border;
+    padding: .5rem;
+
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.content {
+    @media (min-width: 40rem) {
+        display: flex;
+
+        .preview {
+            flex: 1 0 0;
+        }
+
+        .aside {
+            flex: 0 0 15rem;
+        }
+    }
+}
+
+.preview {
+    padding: .5rem;
+}
+
+.aside {
+    padding: .5rem;
+}
+
+.comments-list {
+    ul {
+        list-style: none;    
+    }
+    
+    li:first-child ~ li h4 {
+        margin-top: .5rem;
+    }
+}
+
+.comments-add {
+    margin-top: 1rem;
+}
+
+.block {
+    margin-bottom: 3rem;
+}
+
+.layout {
+    @media (min-width: 40rem) {
+        display: flex;
+        flex-wrap: wrap;
+
+        justify-content: center;
+
+        .block {
+            flex-grow: 0;
+            flex-shrink: 0;
+
+            > div {
+                margin: 0 10px;
+            }
+        }
+
+
+    }
+}
