@@ -4,17 +4,65 @@
         links = [], 
         base = "//preview.omicrone.net/", 
         fetch_project = undefined,
-        hash = window.location.hash.substr(1);
+        hash = window.location.hash.substr(2);
 
     var view_intro = $(".app-intro"),
         view_upload = $(".app-upload"),
         view_view = $(".app-view");
 
-    // form get
-
     var element_intro_id = $("#intro-input-id"),
         element_intro_pass = $("#intro-input-pass"),
         element_intro_btn = $("#intro-btn");
+
+    var element_view_dialog = $(".view-confirm-pass"),
+        element_view_pass = $("#view-input-pass"),
+        element_view_btn = $("#view-btn");
+
+    var element_upload_btn = $("#upload-btn"),
+        element_upload_client = $("#upload-input-client"),
+        element_upload_project = $("#upload-input-project"),
+        element_upload_type = $("#upload-input-type"),
+        element_upload_password = $("#upload-input-password");
+
+    // hash
+
+    function f_time(time) {
+        return new Date(time);
+    }
+
+    function f_hash() {
+        hash = window.location.hash.substr(2);
+
+        $(".view").innerHTML = '';
+
+        if (hash === "" || hash === "new") {
+            f_restore ();
+        } else {
+            view_intro.classList.add("hide");
+            view_upload.classList.add("hide");
+            view_view.classList.remove("hide");
+            fetch_project = hash;
+            _fetchLink(fetch_project, element_intro_pass.value);
+        }
+    }
+
+    if (hash != '') {
+        f_hash();
+    } else {
+        view_intro.classList.remove("hide");
+    }
+
+    window.addEventListener("hashchange", f_hash);
+
+    // restore 
+
+    function f_restore () {
+        view_intro.classList.remove("hide");
+        view_upload.classList.add("hide");
+        view_view.classList.add("hide");
+    }
+
+    // form get
 
     function f_intro_click() {
         fetch_project = element_intro_id.value;
@@ -24,24 +72,7 @@
 
     element_intro_btn.addEventListener("click", f_intro_click);
 
-    function f_hash() {
-        fetch_project = window.location.hash.substr(1);
-
-        _fetchLink(fetch_project, element_intro_pass.value);
-    }
-
-    if (hash != '') {
-
-        f_hash();
-    }
-
-    window.addEventListener("hashchange", f_hash);
-
     // form password
-
-    var element_view_dialog = $(".view-confirm-pass"),
-        element_view_pass = $("#view-input-pass"),
-        element_view_btn = $("#view-btn");
 
     function f_view_click() {
 
@@ -52,32 +83,27 @@
 
     // form create
 
-    var element_upload_btn = $("#upload-btn"),
-        element_upload_client = $("#upload-input-client"),
-        element_upload_project = $("#upload-input-project"),
-        element_upload_type = $("#upload-input-type"),
-        element_upload_password = $("#upload-input-password");
-
     function f_upload () {
 
         links.forEach(function (link) {
             link.element = undefined;
         });
 
-        var type = (element_upload_type.selectedOptions[0].value != "null") ? element_upload_type.selectedOptions[0].text : undefined;
+        var uploadType = (element_upload_type.selectedOptions[0].value != "null") ? element_upload_type.selectedOptions[0].text : undefined;
 
         var data = {
             links: links,
             client: element_upload_client.value,
             project: element_upload_project.value,
-            type: type
+            time: Date.now(),
+            type: uploadType
         };
 
         _saveLink (
             JSON.stringify(data), 
             element_upload_client.value, 
             element_upload_project.value, 
-            type,
+            uploadType,
             element_upload_password.value
         );
     }
@@ -99,7 +125,7 @@
         if (response.code === 200) {
             view_upload.classList.add("hide");
 
-            window.location.hash = "#" + response.id;
+            window.location.hash = "#/" + response.id;
         }
 
         console.log(response);
@@ -110,6 +136,12 @@
     function _fetchLink (link, pass) {
 
         var param = "id=" + link + "&pass=" + pass;
+
+        window.removeEventListener("hashchange", f_hash);
+
+        window.location.hash = "#/" + link;
+
+        window.addEventListener("hashchange", f_hash);
 
         _ajax(param, "get", _fetchLink_complete);
 
@@ -130,13 +162,15 @@
         if (response.code === 200) {
             var data = JSON.parse(response.data);
 
-            _renderLinkFetch(data)
+            _renderLinkFetch(data, response.id)
+        }
+
+        if (response.code === 400) {
+            $(".view").innerHTML = '<div class="view-message"><h2>Project cannot be displayed</h2><p>' + response.message + '</p><p><a href="/" class="btn">Show homepage</a></p></div>';
         }
     }
 
-    function _renderLinkFetch (data) {
-
-        console.log(data);
+    function _renderLinkFetch (data, id) {
 
         var view = $(".view");
         view.innerHTML = '';
@@ -156,7 +190,13 @@
         if (data.project) headlineContent.push(data.project);
         if (data.type) headlineContent.push(data.type);
 
-        var headline = create("h1", "headline", view, headlineContent.join(" — "));
+        var header = create("div", "header", view);
+
+        var headline = create("h1", "headline", header, headlineContent.join(" — "));
+        var time = create("p", "headline-time", header, f_time(data.time));
+        var permalink = create("a", "headline-permalink", header, "http:" + base + "view/" + id);
+            permalink.href = "http:" + base + "view/" + id;
+
         var content = create("div", "content", view);
 
         data.links.forEach(function (link) {
@@ -206,13 +246,11 @@
         create("layout", "div", "group", "group-layout");
         create("preview", "div", "layout", "group-preview");
         create("data", "div", "layout", "group-data");
-        create("title", "div", "data");
-        create("description", "div", "data");
-        create("width", "div", "data");
-        create("height", "div", "data");
-        create("enabled", "div", "data");
+        create("title", "div", "data", "group");
+        create("description", "div", "data", "group");
 
         if (link.type === "img") {
+
             element.item = document.createElement("IMG");
             element.item.width = link.width;
             element.item.height = link.height;
@@ -220,7 +258,12 @@
         } else if (link.type = "iframe") {
             element.item = document.createElement("IFRAME");
             element.item.src = "//" + link.src;
+
+            create("width", "div", "data", "group");
+            create("height", "div", "data", "group");
         }
+
+        create("enabled", "div", "data", "group");
 
         element.preview.appendChild(element.item);
 
