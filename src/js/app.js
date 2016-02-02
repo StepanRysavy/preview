@@ -213,7 +213,22 @@
                 previewElement.height = link.height;
                 previewElement.src = "//" + link.src;
 
-                if (link.title) if (link.title.length > 0) var title = create("h4", "group-title", data, link.title);
+                if (link.title || link.type === "iframe") {
+
+                    var titleHolder = create("h4", "group-title-holder", data);
+                    
+                    if (link.title) if (link.title.length > 0) var title = create("span", "group-title", titleHolder, link.title);
+                    if (link.type === "iframe") {
+
+                        function reload_iFrame () {
+                            previewElement.src = "//" + link.src;
+                        }
+
+                        var reload = create("a", "group-title-reload", titleHolder, "replay");
+                        reload.addEventListener("click", reload_iFrame);
+                    }
+
+                }
                 if (link.description) if (link.description.length > 0) var description = create("p", "group-description", data, link.description);
 
             }
