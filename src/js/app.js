@@ -24,6 +24,13 @@
         element_upload_type = $("#upload-input-type"),
         element_upload_password = $("#upload-input-password");
 
+    var svg = {
+        repeat: "M1536 1280v-448q0 -26 -19 -45t-45 -19h-448q-42 0 -59 40q-17 39 14 69l138 138q-148 137 -349 137q-104 0 -198.5 -40.5t-163.5 -109.5t-109.5 -163.5t-40.5 -198.5t40.5 -198.5t109.5 -163.5t163.5 -109.5t198.5 -40.5q119 0 225 52t179 147q7 10 23 12q14 0 25 -9 l137 -138q9 -8 9.5 -20.5t-7.5 -22.5q-109 -132 -264 -204.5t-327 -72.5q-156 0 -298 61t-245 164t-164 245t-61 298t61 298t164 245t245 164t298 61q147 0 284.5 -55.5t244.5 -156.5l130 129q29 31 70 14q39 -17 39 -59z",
+        download: "M1280 192q0 26 -19 45t-45 19t-45 -19t-19 -45t19 -45t45 -19t45 19t19 45zM1536 192q0 26 -19 45t-45 19t-45 -19t-19 -45t19 -45t45 -19t45 19t19 45zM1664 416v-320q0 -40 -28 -68t-68 -28h-1472q-40 0 -68 28t-28 68v320q0 40 28 68t68 28h465l135 -136 q58 -56 136 -56t136 56l136 136h464q40 0 68 -28t28 -68zM1339 985q17 -41 -14 -70l-448 -448q-18 -19 -45 -19t-45 19l-448 448q-31 29 -14 70q17 39 59 39h256v448q0 26 19 45t45 19h256q26 0 45 -19t19 -45v-448h256q42 0 59 -39z"
+    };
+
+    var downloadLinkPlaceholder;
+
     // hash
 
     function f_time(time) {
@@ -197,6 +204,14 @@
         var permalink = create("a", "headline-permalink", header, "http:" + base + "view/" + id);
             permalink.href = "http:" + base + "view/" + id;
 
+        function downloadAllFiles(e) {
+            e.preventDefault();
+            _downloadLink(data.links);
+        }
+
+        var downloadAll = create("a", "headline-download icon", header, '<svg viewbox="0 0 1664 1664"><path d="' + svg.download + '" /></svg>');
+            downloadAll.addEventListener("click", downloadAllFiles);
+
         var content = create("div", "content", view);
 
         data.links.forEach(function (link) {
@@ -224,8 +239,22 @@
                             previewElement.src = "//" + link.src;
                         }
 
-                        var reload = create("a", "group-title-reload", titleHolder, "replay");
+                        var reload = create("a", "group-title-reload icon", titleHolder, '<svg viewbox="0 0 1792 1536"><path d="' + svg.repeat + '" /></svg>');
                         reload.addEventListener("click", reload_iFrame);
+                    }
+
+                    function downloadFile(e) {
+                        e.preventDefault();
+                        window.open(download.href, "_blank");
+                    }
+
+                    var download = create("a", "group-title-download icon", titleHolder, '<svg viewbox="0 0 1664 1664"><path d="' + svg.download + '" /></svg>');
+                    download.href = "//" + link.src + (link.type === "iframe" ? ".zip" : "");
+
+                    if (typeof download.download != "undefined") {
+                        download.download = link.originalName || "download";
+                    } else {
+                        download.addEventListener("click", downloadFile);
                     }
 
                 }
@@ -235,6 +264,30 @@
 
         });
 
+    }
+
+    // download all links
+
+    function _downloadLink_complete (data) {
+        console.log("Download ready");
+        var response = JSON.parse(data);
+
+        if (response.code === 200) {
+            window.location.replace(response.archive);
+        }
+        
+    }
+
+    function _downloadLink (links) {
+        var linksToZip = [];
+
+        links.forEach(function (link) {
+            linksToZip.push(link.name + (link.type === "iframe" ? ".zip" : ""));
+        });
+
+        var param = "files=" + linksToZip.join(",");
+
+        _ajax(param, "download", _downloadLink_complete);
     }
 
     // create link
@@ -322,6 +375,8 @@
             setHeight();
         }
 
+        /**
+
         createFormItem("enabled", "select", "enabled");
 
         create("enabled_true", "option", "input_enabled_ui", "", "yes");
@@ -339,6 +394,8 @@
 
         element.input_enabled_ui.addEventListener("change", setEnabled);
 
+        */
+
         return element;
 
     }
@@ -355,6 +412,7 @@
             height: data.height || 0,
             type: data.type,
             id: data.id,
+            originalName: data.name,
             description: '',
             enabled: true
         };
