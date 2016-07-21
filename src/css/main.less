@@ -194,6 +194,14 @@ label {
     }
 }
 
+.dz-complete {
+    display: none!important;
+}
+
+.dropzone.dz-started .dz-message {
+    display: block!important;
+}
+
 .input-text, .input-input, .input-textarea {
     border: 1px solid fade(@color, 30%);
     background: fade(@color, 4%);
@@ -300,10 +308,6 @@ label {
 
 .group-title {
     text-align: center;
-
-    &:not(:last-child) {
-        border-bottom: @border;
-    }
 }
 
 .dropdata-meta {
@@ -329,13 +333,38 @@ label {
 
 .group-title-holder {
     text-align: center;
+
+    &:not(:last-child) {
+        border-bottom: @border;
+    }
 }
 
-.group-title-reload {
-
+.icon {
     cursor: pointer;
 
     &:not(:first-child) {
-        margin-left: 20px;
+        margin-left: .5rem;
     }
+
+    a& {
+        border: none;
+        position: relative;
+        top: .175em;
+    }
+
+    svg {
+        width: 1rem;
+        height: 1rem;
+        transform: rotate(180deg);
+    }
+
+    path {
+        fill: @color;
+        transition: fill .3s;
+    }
+
+    a&:hover path {
+        fill: #000;
+    }
+
 }
