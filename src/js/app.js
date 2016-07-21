@@ -253,7 +253,96 @@
             create("input_" + name + "_ui", type, to, "input-" + type);
         }
 
-        var element = {};
+        function fetchFileDimensionData () {
+
+            if (loadedIFrame === true) return;
+            loadedIFrame = true;
+
+            // check for <meta name="ad.size" content="width=300,height=250">
+
+            var content,
+                meta,
+                firstDIV,
+                metaFound = false,
+                interval;
+
+            console.log("Fetch begin");
+
+            function loaded () {
+
+                console.log("Fetch loaded");
+
+                meta = content.querySelectorAll("meta");
+
+                meta.forEach(function (metaElement) {
+                    if (metaElement.getAttribute("name") === "ad.size") {
+                        var data = metaElement.getAttribute("content").split(",");
+
+                        data.forEach(function (dataItem) {
+                            var value = dataItem.split("=");
+
+                            if (value.length > 1) {
+                                value[1] = Number(value[1]);
+
+                                if (value[0].toLowerCase() === "width") {
+                                    element.input_width_ui.value = value[1];
+                                    setWidth();
+                                }
+
+                                if (value[0].toLowerCase() === "height") {
+                                    element.input_height_ui.value = value[1];
+                                    setHeight();
+                                }
+
+
+                            }
+                        });
+
+                        element.input_title_ui.value = element.input_width_ui.value + "x" + element.input_height_ui.value;
+                        updateTitle ();
+
+                        metaFound = true;
+
+                        console.log("Fetch by meta");
+                    }
+                });
+
+                if (metaFound === false) {
+                    // setTimeout(function () {
+                        firstDIV = content.querySelector("body>div");
+
+                        element.input_width_ui.value = firstDIV.offsetWidth;
+                        element.input_height_ui.value = firstDIV.offsetHeight;
+                        element.input_title_ui.value = element.input_width_ui.value + "x" + element.input_height_ui.value;
+
+                        setWidth();
+                        setHeight();
+                        updateTitle ();
+
+                        console.log("Fetch by first element");
+
+                    // }, 200);
+                    
+                }
+            }
+
+            function loader () {
+                content = element.item.contentDocument || element.item.contentWindow.document;
+
+                console.log ("Fetch check loaded", content.readyState, content);
+
+                if (  content.readyState  == 'complete' ) {
+                    clearInterval(interval);
+                    loaded ();
+                }
+            }
+
+            interval = setInterval(loader, 100);
+
+        }
+
+        var element = {},
+            loadedIFrame = false;
 
         element.holder = $(".dropdata-elements");
 
@@ -269,10 +358,9 @@
             element.item = document.createElement("IMG");
             element.item.width = link.width;
             element.item.height = link.height;
-            element.item.src = "//" + link.src;
         } else if (link.type = "iframe") {
             element.item = document.createElement("IFRAME");
-            element.item.src = "//" + link.src;
+            element.item.addEventListener("load", fetchFileDimensionData);
 
             create("width", "div", "data", "group");
             create("height", "div", "data", "group");
@@ -338,6 +426,8 @@
         }
 
         element.input_enabled_ui.addEventListener("change", setEnabled);
+            
+        element.item.src = "//" + link.src;
 
         return element;
 
